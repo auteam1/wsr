@@ -1,6 +1,9 @@
 import time
 import sys
 from netmiko import ConnectHandler
+
+
+# TODO: INIT
 #Define Script Start Time
 startTime = time.time()
 
@@ -56,6 +59,9 @@ for host in DEVICES_NAME:
 # Time to connect on all devices
 print(int(time.time()-startTime))
 
+
+
+# TODO: Start of check
 #############################--=START=--####################################
 openedFile.write("Stand number:" + STAND_NUMBER + "\n")
 
