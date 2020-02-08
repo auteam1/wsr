@@ -1,17 +1,16 @@
 import time
 import sys
 from netmiko import ConnectHandler
-
+#Define Script Start Time
 startTime = time.time()
 
-# CONST
-
-USER = 'username'
-PASSWORD = 'password'
-ENABLE_PASS = 'enable'
+# Define Usernames and passwords
+USER = input('Username: ')
+PASSWORD = input('Password: ')
+ENABLE_PASS = input('Enable password: ')
 STAND_NUMBER = input('Enter STAND_NUMBER: ')
 
-# HOSTS' INFORMATION
+# Define Host information and IP address
 
 DEVICES_NAME = [ 'HQ1', 'SW1', 'SW2' ] #, 'SW3', 'ASA' ]
 
