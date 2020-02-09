@@ -1,44 +1,35 @@
-﻿Param(
-[string]$NAMEWIN,
-[string]$SERVERWIN,
-[string]$LOGINSERVERWIN,
-[string]$PASSSERVERWIN,
-[string]$PATHWIN,
-[string]$DATA
-)
-$DIR = $PATHWIN + $NAMEWIN + '.txt'
-Set-PowerCLIConfiguration -DefaultVIServerMode Multiple -InvalidCertificateAction Ignore -Confirm:$false
-Connect-VIServer -Server $SERVERWIN -User $LOGINSERVERWIN -Password $PASSSERVERWIN
-$DC1 = Get-VM -Name 'DC1'
-$DC2 = Get-VM -Name 'DC2'
-$CLI1 = Get-VM -Name 'CLI1'
-$SRV1 = Get-VM -Name 'SRV1'
-$DCA = Get-VM -Name 'DCA'
-$R1 = Get-VM -Name 'R1'
-$R2 = Get-VM -Name 'R2'
-$SRV2 = Get-VM -Name 'SRV2'
-$CLI2 = Get-VM -Name 'CLI2'
-Start-VM -VM $DC1 -Confirm:$false
-Start-VM -VM $DC2 -Confirm:$false
-Start-VM -VM $CLI1 -Confirm:$false
-Start-VM -VM $SRV1 -Confirm:$false
-Start-VM -VM $DCA -Confirm:$false
-Start-VM -VM $R1 -Confirm:$false
-Start-VM -VM $R2 -Confirm:$false
-Start-VM -VM $CLI2 -Confirm:$false
-Start-VM -VM $SRV2 -Confirm:$false
+$NAMEWIN = "Ivanov Ivan" #Competitor name
+$SERVERWIN = "10.10.10.10" #ESXI Stand address
+$LOGINSERVERWIN = "root" #ESXI login
+$PASSSERVERWIN = "P@ssw0rd" #ESXI password
+$DATE = Get-Date -Format "dd-MM-yyyy_HH-MM-ss" #Current time
 
-echo "Дата начала проверки:" $DATA | Out-File $DIR -Append -NoClobber
-echo "Кто выполнял задание:" $NAMELIN | Out-File $DIR -Append -NoClobber
+$DIR = $DATE.ToString() + $NAMEWIN + "_Windows_" + '.txt' #Output file
+Set-PowerCLIConfiguration -DefaultVIServerMode Multiple -InvalidCertificateAction Ignore -Confirm:$false #Ignore invalid certificate
+Connect-VIServer -Server $SERVERWIN -User $LOGINSERVERWIN -Password $PASSSERVERWIN #Connect to Server
+
+
+
+Get-VM | Start-VM #Start all VMs
+Start-Sleep -s 240 #Delay for VM power on
+
+#Start File
+echo "Start Check Time:" $DATE | Out-File $DIR -Append -NoClobber
+echo "Competitor:" $NAMEWIN | Out-File $DIR -Append -NoClobber
+
+#Function sending commands to VM
+function SendCommand ($VM, $Command) {
+  Invoke-VMScript -vm $VM -ScriptText $Command -GuestUser 'Administrator@Kazan.wsr' -GuestPassword 'P@ssw0rd' -ScriptType Powershell | Out-File $DIR -Append -NoClobber
+}
+
+
 
 
 echo "###############################################################'DC1: Network interface configuration'#########################################################################" | Out-File $DIR -Append -NoClobber
-Invoke-VMScript -vm $DC1 -ScriptText "ipconfig /all" -GuestUser 'Administrator@Kazan.wsr' -GuestPassword 'P@ssw0rd' -ScriptType Powershell | Out-File $DIR -Append -NoClobber #DHCP service scope
-(Get-Content $DIR).replace('ScriptOutput', 'DC1: Network interface configuration "ipconfig /all"') | Out-File $DIR
+SendCommand -VM DC1,SRV1,DCA -Command "ipconfig /all"
 
 echo "###############################################################'CLI1: Ping allow'#########################################################################" | Out-File $DIR -Append -NoClobber
-Invoke-VMScript -vm $CLI1 -ScriptText "ping R1.Kazan.wsr" -GuestUser 'Administrator@Kazan.wsr' -GuestPassword 'P@ssw0rd' -ScriptType Powershell | Out-File $DIR -Append -NoClobber
-(Get-Content $DIR).replace('ScriptOutput', 'CLI1: Ping allow command "ping R1.Kazan.wsr"') | Out-File $DIR
+SendCommand -VM CLI1 -Command "ping r1.kazan.wsr"
 
 echo "###############################################################'DC1: Domain Kazan.wsr'#########################################################################" | Out-File $DIR -Append -NoClobber
 Invoke-VMScript -vm $DC1 -ScriptText "Get-ADDomainController | findstr ComputerObjectDN" -GuestUser 'Administrator@Kazan.wsr' -GuestPassword 'P@ssw0rd' -ScriptType Powershell | Out-File $DIR -Append -NoClobber
@@ -182,4 +173,3 @@ Invoke-VMScript -vm $DC1 -ScriptText "test-computersecurechannel dc2.spb.wse" -G
 echo "###############################################################'CLI1: www.SPB.wse'#########################################################################" | Out-File $DIR -Append -NoClobber
 Invoke-VMScript -vm $CLI1 -ScriptText "Invoke-WebRequest -Uri https://www.spb.wse -UseBasicParsing; Invoke-WebRequest -Uri https://spb.wse -UseBasicParsing" -GuestUser 'Administrator@Kazan.wsr' -GuestPassword 'P@ssw0rd' -ScriptType Powershell | Out-File $DIR -Append -NoClobber
 (Get-Content $DIR).replace('ScriptOutput', 'CLI1: www.SPB.wse command "Invoke-WebRequest -Uri https://www.spb.wse -UseBasicParsing; Invoke-WebRequest -Uri https://spb.wse -UseBasicParsing"') | Out-File $DIR
-
