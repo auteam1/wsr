@@ -2,9 +2,9 @@ $NAMELIN = "Ivanov Ivan" #Competitor name
 $SERVERLIN = "10.10.10.10" #ESXI Stand address
 $LOGINSERVERLIN = "root" #ESXI login
 $PASSSERVERLIN = "P@ssw0rd" #ESXI password
-$DATE = Get-Date -Format "dd-MM-yyyy_HH-MM-ss" #Current time
+$STAND = "1" #Stand Number
 
-$DIR = $DATE.ToString() + $NAMELIN + "_Linux_" + '.txt' #Output file
+$DIR = $STAND + "_RESULT" + '.txt' #Output file
 Set-PowerCLIConfiguration -DefaultVIServerMode Multiple -InvalidCertificateAction Ignore -Confirm:$false #Ignore invalid certificate
 Connect-VIServer -Server $SERVERLIN -User $LOGINSERVERLIN -Password $PASSSERVERLIN #Connect to Server
 
