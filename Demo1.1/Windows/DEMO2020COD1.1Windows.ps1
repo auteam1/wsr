@@ -52,37 +52,25 @@ echo "###############################################################'DC1: Corre
 SendCommand -VM DC1 -Command 'Get-ADGroupMember -Identity IT | FindStr SamAccountName'
 
 echo "###############################################################'DC1: No first sign animation'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml'
-SendCommand -VM DC1 -Command '[xml] $gpo = Get-Content c:\gpo.xml'
-SendCommand -VM DC1 -Command '$gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
 
 echo "###############################################################'DC1: Default Home Page for Edge and IE'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml'
-SendCommand -VM DC1 -Command '[xml] $gpo = Get-Content c:\gpo.xml'
-SendCommand -VM DC1 -Command '$gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
 
 echo "###############################################################'DC1: Local admin GPO'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml'
-SendCommand -VM DC1 -Command '[xml] $gpo = Get-Content c:\gpo.xml'
-SendCommand -VM DC1 -Command '$gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
 
 echo "###############################################################'DC1: Shares message'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml'
-SendCommand -VM DC1 -Command '[xml] $gpo = Get-Content c:\gpo.xml'
-SendCommand -VM DC1 -Command '$gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
 
 echo "###############################################################'DC1: DHCP service scope'#########################################################################" | Out-File $DIR -Append -NoClobber
 SendCommand -VM DC1 -Command 'Get-DhcpServerv4Scope'
 
 echo "###############################################################'DC1: Sleep mode'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml'
-SendCommand -VM DC1 -Command '[xml] $gpo = Get-Content c:\gpo.xml'
-SendCommand -VM DC1 -Command '$gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
 
 echo "###############################################################'DC1: Shortcut fo Calc'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml'
-SendCommand -VM DC1 -Command '[xml] $gpo = Get-Content c:\gpo.xml'
-SendCommand -VM DC1 -Command '$gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
 
 echo "###############################################################'CLI1: Home folder'#########################################################################" | Out-File $DIR -Append -NoClobber
 SendCommand -VM CLI1 -Command 'net use U: \\srv1\IT_1'
