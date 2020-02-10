@@ -5,7 +5,7 @@ from netmiko import ConnectHandler
 # https://www.jaacostan.com/2018/09/how-to-install-netmiko-on-windows.html
 
 '''
-This script comprises 3 parts, separeted TODO:
+This script consists of 3 parts, separate through todo comments:
 
 1. Init
 This block describes all the necessary constants and variables
@@ -15,14 +15,19 @@ Function block in which all necessary functions are defined
 
 3. Start of check
 The verification process itself
+
+Before the start script edit first(init) block!
 '''
 
 # TODO: Init
 
+# Edit this sector
 STAND_NUMBER = '1'      # Stand number
 USER = 'wsruser'        # Username
 PASSWORD = 'network'    # Password
 ENABLE_PASS = 'pass'    # Enable password
+###
+
 DEAD_DEVICES = list()   # Empty list with dead devices
 openedFile = open( STAND_NUMBER + "_RESULT" + ".txt", "w") # Create result file
 
@@ -39,8 +44,9 @@ con = {}
 
 # TODO: Main functions
 
-# Just write in result file
 # Use: Write('Sobaka')
+#
+# Just write in result file
 def Write(string):
     print(string)
     openedFile.write(string)
@@ -94,7 +100,7 @@ print(int(time.time() - startTime))
 
 #############################--=START=--####################################
 
-Write('Stand number:' + STAND_NUMBER + '\n')
+Write('Stand number: ' + STAND_NUMBER + '\n')
 
 # TODO: C1.1
 Write('===================================C1.1===================================\n')
