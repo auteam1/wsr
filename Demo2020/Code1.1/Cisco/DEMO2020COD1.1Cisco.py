@@ -1,10 +1,5 @@
-import time
-import sys
-from netmiko import ConnectHandler
-# How to install netmiko:
-# https://www.jaacostan.com/2018/09/how-to-install-netmiko-on-windows.html
-
 '''
+
 This script consists of 3 parts, separate through todo comments:
 
 1. Init
@@ -17,40 +12,43 @@ Function block in which all necessary functions are defined
 The verification process itself
 
 Before the start script edit first(init) block!
+
 '''
 
-# TODO: Init
 
-# Edit this sector
-STAND_NUMBER = '1'      # Stand number
-USER = 'wsruser'        # Username
-PASSWORD = 'network'    # Password
-ENABLE_PASS = 'pass'    # Enable password
-###
+# TODO: 0. Dependencies
 
-DEAD_DEVICES = list()   # Empty list with dead devices
-openedFile = open( STAND_NUMBER + "_RESULT" + ".txt", "w") # Create result file
+import time
+import sys
+from netmiko import ConnectHandler
+# How to install netmiko:
+# https://www.jaacostan.com/2018/09/how-to-install-netmiko-on-windows.html
 
-DEVICES_NAME = [ 'HQ1', 'SW1', 'SW2' ] #, 'SW3', 'ASA' ]
-IP  =   {   'HQ1'   :   '1.1.1.1'       ,
-            'SW1'   :   '172.16.1.1'    ,
-            'SW2'   :   '172.16.1.2'
-            # .......
-            }
-startTime = time.time() # Define Script Start Time
-con = {}
+# TODO: 1. Init
 
+STAND_NUMBER        = '1'           # Stand number
+USER                = 'wsruser'     # Username
+PASSWORD            = 'network'     # Password
+ENABLE_PASS         = 'pass'        # Enable password
+SSH_PORT            = 22            # Port for SSH connection
+DEVICES_NAME        = [ 'HQ1', 'SW1', 'SW2' ] #, 'SW3', 'ASA' ]
+IP                  = { 'HQ1'   :   '1.1.1.1'       ,
+                        'SW1'   :   '172.16.1.1'    ,
+                        'SW2'   :   '172.16.1.2'
+                        # .......
+                        }
 
+# TODO: 2. Main functions
 
-# TODO: Main functions
-
-# Use: Write('Sobaka')
-#
 # Just write in result file
+#
+# Use: Write('Sobaka')
 def Write(string):
     print(string)
     openedFile.write(string)
 
+# Function for send command to network device
+#
 # Use: SendCommand('HQ1','sh ip int b')
 #
 # OR
@@ -75,9 +73,15 @@ def SendCommand(host_arr, command_arr):
         for command in command_arr:
             Write(con[host].send_command(command) + '\n')
 
+# TODO: 3. Start of check
 
+# Create result file
+openedFile = open( STAND_NUMBER + "_RESULT" + ".txt", "w")
+startTime = time.time() # Define Script Start Time
+con = {}
 
-# TODO: Start of check
+# Empty list with dead devices
+DEAD_DEVICES = list()
 
 # Create conn dictionary
 for host in DEVICES_NAME:
@@ -86,7 +90,7 @@ for host in DEVICES_NAME:
                         'username'      :   USER        ,
                         'password'      :   PASSWORD    ,
                         'secret'        :   ENABLE_PASS ,
-                        'port'          :   22
+                        'port'          :   SSH_PORT
                         }
     try:
         con[host] = ConnectHandler(**DEVICES_PARAMS)
