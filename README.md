@@ -32,4 +32,5 @@ There are also variables that have a default value, they are provided below (if 
 * **PASS_ESXi** - _string_ Password for login ESXi **Default** `P@ssw0rd`
 * **LOGIN_VM** - _string_ Password for login to Virtual Machine **Default for Linux** `root` , **Default for Windows** `Administrator`
 * **PASS_VM** - _string_ Password for login to Virtual Machine **Default for Linux** `toor` , **Default for Windows** `P@ssw0rd`
-> The domain name for the Administrator is set correctly and depends on the event 
+* **DELAY** - _integer_ Delay before power on VM, you can set this value to 0 for easy debugging  **Default** `30`
+> The domain name for the Administrator is set correctly and depends on the event
