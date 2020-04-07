@@ -48,20 +48,20 @@ Function SendScript
          $Description,
          $Username,
          $Password )
- If ($Description -ne $null)
+ If ($null -ne $Description)
  {
-   echo "#########################--=$Description=--#########################" `
+   Write-Output "#########################--=$Description=--#########################" `
    | Out-File $FILE -Append -NoClobber
  }
- echo "Script	     : $Script" | Out-File $FILE -Append -NoClobber
- If ( ($Username  -eq $null) -or ($Password  -eq $null) )
+ Write-Output "Script	     : $Script" | Out-File $FILE -Append -NoClobber
+ If ( ($null -eq $Username) -or ($null -eq $Password) )
  {
    $Username = $LOGIN_VM
    $Password = $PASS_VM
  }
  else {
-   echo "Username     : $Username" | Out-File $FILE -Append -NoClobber
-   echo "Password     : $Password" | Out-File $FILE -Append -NoClobber
+   Write-Output "Username     : $Username" | Out-File $FILE -Append -NoClobber
+   Write-Output "Password     : $Password" | Out-File $FILE -Append -NoClobber
  }
  Invoke-VMScript  -vm $VM                                   `
                   -ScriptText $Script                       `
@@ -137,7 +137,7 @@ else
 
 # Create output file
 $FILE = [string]$STAND + '_RESULT' + '.txt'
-echo '' > $FILE
+Write-Output '' > $FILE
 
 # Connect to Server and ignore invalid certificate
 Set-PowerCLIConfiguration -DefaultVIServerMode Multiple     `
@@ -152,8 +152,8 @@ Start-Sleep -s $DELAY
 ###########################--=START=--##################################
 
 $DATE = Get-Date
-echo $DATE        | Out-File $FILE -Append -NoClobber
-echo $COMPETITOR  | Out-File $FILE -Append -NoClobber
+Write-Output $DATE        | Out-File $FILE -Append -NoClobber
+Write-Output $COMPETITOR  | Out-File $FILE -Append -NoClobber
 
 # TODO: A1.1 Hostnames
 SendScript -VM 'L-CLI-A', 'R-SRV'                     `
@@ -302,14 +302,14 @@ SendScript -VM 'L-FW'                                 `
            -Description 'RA: OpenVPN basic'
 
 # TODO: A3.2 RA: VPN Clients have full access to LEFT and RIGHT LANs
-$SCRIPT = 'ls /opt/vpn; start_vpn.sh; sleep 5; ping L-SRV.skill39.wsr -c 4; ping R-SRV.skill39.wsr -c 4'
+$SCRIPT = 'ls /opt/vpn; start_vpn.sh; sleep 5; ping L-SRV.skill39.wsr -c 2; ping R-SRV.skill39.wsr -c 2'
 SendScript -VM 'OUT-CLI'                              `
            -Script $SCRIPT                            `
            -Description 'RA: VPN Clients have full access to LEFT and RIGHT LANs'
 
 
 $DATE = Get-Date
-echo $DATE        | Out-File $FILE -Append -NoClobber
+Write-Output $DATE        | Out-File $FILE -Append -NoClobber
 #
 # echo "###############################################################'L-FW' RA: OpenVPN basic#########################################################################" | Out-File $FILE -Append -NoClobber
 #
