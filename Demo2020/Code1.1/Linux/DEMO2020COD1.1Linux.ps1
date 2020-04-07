@@ -118,7 +118,7 @@ else
 {
   Do
   {
-    $COMPETITOR = Read-Host "Competitor Firstname Lastname"
+    $COMPETITOR = Read-Host "Competitor FirstnameLastname"
   } until ( $COMPETITOR.length -ge 2 )
 }
 
@@ -296,10 +296,17 @@ SendScript -VM 'L-SRV'                                `
            -Script $SCRIPT
 
 # TODO: A3.1 RA: OpenVPN basic
-$SCRIPT = 'ls /opt/vpn; netstat -npl | grep 1122; systemctl status openvpn@server | grep Active; grep -e "^[dev, proto, comp-lzo]" /etc/openvpn/*.conf; '
+$SCRIPT = 'ls /opt/vpn; netstat -npl | grep 1122; systemctl status openvpn@server | grep Active; grep -v "^[# $]" /etc/openvpn/*.conf'
 SendScript -VM 'L-FW'                                 `
            -Script $SCRIPT                            `
            -Description 'RA: OpenVPN basic'
+
+# TODO: A3.2 RA: VPN Clients have full access to LEFT and RIGHT LANs
+$SCRIPT = 'ls /opt/vpn; start_vpn.sh; sleep 5; ping L-SRV.skill39.wsr -c 4; ping R-SRV.skill39.wsr -c 4'
+SendScript -VM 'OUT-CLI'                              `
+           -Script $SCRIPT                            `
+           -Description 'RA: VPN Clients have full access to LEFT and RIGHT LANs'
+
 
 $DATE = Get-Date
 echo $DATE        | Out-File $FILE -Append -NoClobber

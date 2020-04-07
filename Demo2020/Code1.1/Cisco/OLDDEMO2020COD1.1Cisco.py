@@ -1,25 +1,23 @@
 '''
 
- This script consists of 3 section, separate through todo comments:
+This script consists of 3 parts, separate through todo comments:
 
- 0. Dependencies
- Section with links to download all needed dependencies
+1. Init
+This block describes all the necessary constants and variables
 
- 1. Init
- This block describes all the necessary constants and variables
+2. Main functions
+Function block in which all necessary functions are defined
 
- 2. Main functions
- Function block in which all necessary functions are defined
+3. Start of check
+The verification process itself
 
- 3. Start of check
- The verification process itself
+Before the start script edit first(init) block!
 
 '''
 
 
 # TODO: 0. Dependencies
 
-# Install Python 3.x
 import time
 import sys
 from netmiko import ConnectHandler
@@ -28,6 +26,7 @@ from netmiko import ConnectHandler
 
 # TODO: 1. Init
 
+STAND_NUMBER        = '1'           # Stand number
 USER                = 'wsruser'     # Username
 PASSWORD            = 'network'     # Password
 ENABLE_PASS         = 'pass'        # Enable password
@@ -75,31 +74,6 @@ def SendCommand(host_arr, command_arr):
             Write(con[host].send_command(command) + '\n')
 
 # TODO: 3. Start of check
-
-# Set STAND_NUMBER
-try:
-    STAND_NUMBER = int(sys.argv[1])
-except:
-    while True:
-        STAND_NUMBER = input('Stand number: ')
-        try: 
-            int(STAND_NUMBER)
-            break
-        except:
-            continue
-
-# Set COMPETITOR
-try:
-    COMPETITOR = str(sys.argv[2])
-except:
-    while True:
-        COMPETITOR = input('Competitor FirstnameLastname: ')
-        try: 
-            str(COMPETITOR)
-            break
-        except:
-            continue
-
 
 # Create result file
 openedFile = open( STAND_NUMBER + "_RESULT" + ".txt", "w")
