@@ -63,13 +63,13 @@ Function SendScript
    Write-Output "Username     : $Username" | Out-File $FILE -Append -NoClobber
    Write-Output "Password     : $Password" | Out-File $FILE -Append -NoClobber
  }
- Invoke-VMScript  -vm $VM                                   `
-                  -ScriptText $Script                       `
-                  -GuestUser $Username                      `
-                  -GuestPassword $Password                  `
-                  -ScriptType Bash                          `
-                  | Format-List -Property VM,ScriptOutput   `
-                  | Out-File $FILE -Append -NoClobber
+  Invoke-VMScript   -vm $VM                                   `
+                    -ScriptText $Script                       `
+                    -GuestUser $Username                      `
+                    -GuestPassword $Password                  `
+                    -ScriptType Bash                          `
+                    | Format-List -Property VM,ScriptOutput   `
+                    | Out-File $FILE -Append -NoClobber
 
 }
 
@@ -159,7 +159,7 @@ Write-Output $COMPETITOR  | Out-File $FILE -Append -NoClobber
 SendScript -VM 'L-CLI-A', 'R-SRV'                     `
            -Script 'cat /etc/hostname'                `
            -Description 'Hostnames'
-
+           
 # TODO: A1.2 IPv4 connectivity
 SendScript -VM 'L-CLI-B', 'R-CLI'                     `
            -Script 'ping -c 4 2.2.2.2'                `
@@ -296,7 +296,7 @@ SendScript -VM 'L-SRV'                                `
            -Script $SCRIPT
 
 # TODO: A3.1 RA: OpenVPN basic
-$SCRIPT = 'ls /opt/vpn; netstat -npl | grep 1122; systemctl status openvpn@server | grep Active; grep -v "^[# $]" /etc/openvpn/*.conf'
+$SCRIPT = 'ls /opt/vpn /etc/openvpn; netstat -npl | grep 1122; echo Unit status: &&  systemctl status openvpn@server | cat | grep Active; echo Config file: && grep -v "^[# $ ;]" /etc/openvpn/*.conf | grep -v "^$"'
 SendScript -VM 'L-FW'                                 `
            -Script $SCRIPT                            `
            -Description 'RA: OpenVPN basic'
@@ -307,81 +307,65 @@ SendScript -VM 'OUT-CLI'                              `
            -Script $SCRIPT                            `
            -Description 'RA: VPN Clients have full access to LEFT and RIGHT LANs'
 
+# TODO: A3.3 IPSEC + GRE
+$SCRIPT = 'ipsec status | grep connections:'
+SendScript -VM 'R-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'IPSEC + GRE'
+$SCRIPT = 'ipsec status'
+SendScript -VM 'L-FW'                                 `
+           -Script $SCRIPT                            `
+
+# TODO: A3.4 GRE Tunnel Cinnectivity
+$SCRIPT = 'ping 10.5.5.1 -c 2'
+SendScript -VM 'R-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'GRE Tunnel Cinnectivity'
+$SCRIPT = 'ping 10.5.5.2 -c 2'
+SendScript -VM 'L-FW'                                 `
+           -Script $SCRIPT                            `
+
+# TODO: A3.5 FRR: Neigbours 
+SendScript -VM 'L-FW','R-FW'                          `
+           -Script 'vtysh -E -c "show ip ospf ne"'    `
+           -Description 'FRR: Neigbours'
+
+# TODO: A3.6 FRR: Local interfaces 
+SendScript -VM 'L-FW','R-FW'                          `
+           -Script 'vtysh -E -c "show run"'           `
+           -Description 'FRR: Local interfaces'
+
+# TODO: A3.7 FRR: Passive interfaces
+SendScript -VM 'L-RTR-A','R-RTR'                      `
+           -Script 'vtysh -E -c "show run"'           `
+           -Description 'FRR: Local interfaces'
+
+# TODO: A3.8 SSH: Users
+SendScript -VM 'OUT-CLI'                              `
+           -Script 'ssh ssh_c@l-fw.skill39.wsr'       `
+           -Description 'SSH: Users'
+
+SendScript -VM 'OUT-CLI'                              `
+           -Script 'ssh root@l-fw.skill39.wsr'        `
+
+SendScript -VM 'OUT-CLI'                              `
+           -Script 'ssh abc@l-fw.skill39.wsr'         `
+
+# TODO: A3.9 SSH: Key authentication
+SendScript -VM 'OUT-CLI'                              `
+           -Script 'ssh ssh_p@l-fw.skill39.wsr'       `
+           -Description 'SSH: Key authentication'
+
+# TODO: A4.1 Apache: Port, PHP
+SendScript -VM 'R-SRV'                                `
+           -Script 'ssh ssh_p@l-fw.skill39.wsr'       `
+           -Description 'SSH: Key authentication'
+
 
 $DATE = Get-Date
 Write-Output $DATE        | Out-File $FILE -Append -NoClobber
-#
-# echo "###############################################################'L-FW' RA: OpenVPN basic#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#         Invoke-VMScript -vm $LFW -ScriptText "ls /opt/vpn; netstat -npl | grep 1122; grep -v '^[# $]' /etc/openvpn/server.conf; ip a" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-FW RA: OpenVPN basic Script ls /opt/vpn; netstat -npl | grep 1122; grep -v "^[# $]" /etc/openvpn/server.conf; ip a') | Out-File $FILE
-#
-# echo "###############################################################'L-FW' Routing: Dynamic#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#    Invoke-VMScript -vm $LFW -ScriptText "ip r; vtysh -e 'sh ip ospf nei' ; vtysh -e 'sh ip route ospf'" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-FW Routing: Dynamic Script ip r; vtysh -e sh ip ospf nei; vtysh -e sh ip route ospf') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' Routing: OSPF over GRE#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#     Invoke-VMScript -vm $RFW -ScriptText "vtysh -e 'sh ip ospf nei'" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'R-FW Routing: OSPF over GRE Script vtysh -e sh ip ospf nei') | Out-File $FILE
-#
-# echo "###############################################################'L-CLI-A' Routing: Filter#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-# Invoke-VMScript -vm $LCLIA -ScriptText "timeout 10 tcpdump -i ens32 -n 'ip[9] == 89'" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'LCLIA Routing: Filter Script  timeout 10 tcpdump -i eth1 -n ip[9] == 89') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' IPSec Active Status#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#     Invoke-VMScript -vm $RFW -ScriptText "ipsec status; cat /etc/ipsec.confs" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'R-FW IPSec Active Status Script ipsec status cat /etc/ipsec.conf') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' IPSec Parameters and GRE only#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#     Invoke-VMScript -vm $RFW -ScriptText "ipsec status" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'R-FW IPSec Parameters and GRE only Script ipsec status') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' GRE Tunnel#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#     Invoke-VMScript -vm $RFW -ScriptText "ip a; ping 10.5.5.2 -c 4; ping 10.5.5.1 -c 4" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'R-FW GRE Tunnel Script ip a; ping 10.5.5.2 -c 4 ; ping 10.5.5.1 -c 4') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' GRE over IPSec#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#     Invoke-VMScript -vm $RFW -ScriptText "ipsec status" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'R-FW GRE over IPSec Script tcpdump -I any  esp -v') | Out-File $FILE
 
-# echo "###############################################################'OUT-CLI' RA: VPN Connect Script#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#         Invoke-VMScript -vm $OUTCLI -ScriptText "ip a; ls /opt/vpn; cd ~ ; stop_vpn.sh ; sleep 5; ping 5.5.5.1 -c 4 ;start_vpn.sh vpn66 Passw0rd; sleep 5 ; ip a; ping 5.5.5.1 -c 4" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI RA: VPN Connect Script Script ip a; ls /opt/vpn; cd ~ ; stop_vpn.sh ; sleep 5; ping 5.5.5.1 -c 4 ;start_vpn.sh vpn66 Passw0rd; sleep 5 ; ip a; ping 5.5.5.1 -c 4') | Out-File $FILE
-#
-# echo "###############################################################'OUT-CLI' RA: VPN Disconnect Script#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#         Invoke-VMScript -vm $OUTCLI -ScriptText "op a; stop_vpn.sh;sleep 5; ip a; ping 5.5.5.1 -c 4" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI RA: VPN Disconnect Script Script stop_vpn.sh; ip a; ping 5.5.5.1 -c 4') | Out-File $FILE
-#
-#
-# echo "###############################################################'OUT-CLI' RA: OpenVPN LDAP authentication 	RA: OpenVPN Client Autoconf#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#           Invoke-VMScript -vm $OUTCLI -ScriptText "cat /etc/resolv.conf" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI RA: VPN Disconnect Script Script cat /etc/resolv.conf') | Out-File $FILE
-#
-#         Invoke-VMScript -vm $OUTCLI -ScriptText "start_vpn.sh vpn66 VRONPassw0rd; sleep 5; ip a; ping 5.5.5.1 -c 4" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI RA: VPN Disconnect Script Script start_vpn.sh vpn66 Passw0rd') | Out-File $FILE
-#
-# echo "###############################################################'OUT-CLI' SSH: Users#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#         Invoke-VMScript -vm $OUTCLI -ScriptText "sshpass -p P@ssw0rd ssh -o 'StrictHostKeyChecking no' ssh_c@vpn.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI SSH: Users Script sshpass -p toor ssh -o StrictHostKeyChecking no root@vpn.skill39.wsr') | Out-File $FILE
-#
-#
-# echo "###############################################################'OUT-CLI' SSH: Key authentication#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#         Invoke-VMScript -vm $OUTCLI -ScriptText "timeout 10 ssh ssh_p@vpn.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI SSH: Key authentication Script sshpass -p toor ssh vpn.skill39.wsr') | Out-File $FILE
-#
-#
+
 # echo "###############################################################'L-SRV' RAID#########################################################################" | Out-File $FILE -Append -NoClobber
 #
 #  Invoke-VMScript -vm $LSRV -ScriptText "lsblk" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber

@@ -1,139 +1,308 @@
-$NAMEWIN = "Mikhail Mokshancev" #Competitor name
-$SERVERWIN = "10.11.8.19" #ESXI Stand address
-$LOGINSERVERWIN = "root" #ESXI login
-$PASSSERVERWIN = 'P@ssw0rd' #ESXI password
-$STAND = "1" #Stand Number
+###
+#
+# This script consists of 3 section, separate through todo comments:
+#
+# 0. Dependencies
+# Section with links to download all needed dependencies
+#
+# 1. Init
+# This block describes all the necessary constants and variables
+#
+# 2. Main functions
+# Function block in which all necessary functions are defined
+#
+# 3. Start of check
+# The verification process itself
+#
+###
 
-$DIR = $STAND + "_RESULT" + '.txt' #Output file
-Set-PowerCLIConfiguration -DefaultVIServerMode Multiple -InvalidCertificateAction Ignore -Confirm:$false #Ignore invalid certificate
-Connect-VIServer -Server $SERVERWIN -User $LOGINSERVERWIN -Password $PASSSERVERWIN #Connect to Server
+# TODO: 0. Dependencies
 
+# 1. Run powershell as Administrator
+#
+# 2. Copy and Paste the following script to install this package
+# Install-Module -Name VMware.PowerCLI -Force
+#
+# OR
+#
+# https://code.vmware.com/web/tool/11.5.0/vmware-powercli
 
+# TODO: 1. Init
 
-Get-VM | Start-VM #Start all VMs
-Start-Sleep -s 240 #Delay for VM power on
+$LOGIN_ESXi         = 'root'            # ESXi login
+$PASS_ESXi          = 'P@ssw0rd'        # ESXi password
+$LOGIN_VM           = 'Administrator'   # VM Login
+$PASS_VM            = 'P@ssw0rd'        # VM Password
+$DELAY              = 30                # Delay before start VM
 
-#Start File
-echo "Start Check Time:" $DATE | Out-File $DIR -Append -NoClobber
-echo "Competitor:" $NAMEWIN | Out-File $DIR -Append -NoClobber
+# TODO: 2. Main functions
 
-#Function sending commands to VM
-function SendCommand ($VM, $Command) {
-  Invoke-VMScript -vm $VM -ScriptText $Command -GuestUser 'Administrator@Kazan.wsr' -GuestPassword 'P@ssw0rd' -ScriptType Powershell | Out-File $DIR -Append -NoClobber
+# Function for send Script to VM
+# Return a Script output from VM, if all ok
+#
+# Use: SendScript -VM 'L-SRV' -Script 'hostnamectl' -Description 'Hostname'
+Function SendScript
+{
+  Param( $VM,
+         $Script,
+         $Description,
+         $Username,
+         $Password )
+ If ($null -ne $Description)
+ {
+   Write-Output "#########################--=$Description=--#########################" `
+   | Out-File $FILE -Append -NoClobber
+ }
+ Write-Output "Script	     : $Script" | Out-File $FILE -Append -NoClobber
+ If ( ($null -eq $Username) -or ($null -eq $Password) )
+ {
+   $Username = $LOGIN_VM
+   $Password = $PASS_VM
+ }
+ else {
+   Write-Output "Username     : $Username" | Out-File $FILE -Append -NoClobber
+   Write-Output "Password     : $Password" | Out-File $FILE -Append -NoClobber
+ }
+  Invoke-VMScript   -vm $VM                                   `
+                    -ScriptText $Script                       `
+                    -GuestUser $Username                      `
+                    -GuestPassword $Password                  `
+                    -ScriptType Powershell                    `
+                    | Format-List -Property VM,ScriptOutput   `
+                    | Out-File $FILE -Append -NoClobber
+
 }
 
-echo "###############################################################'DC1: Network interface configuration'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'ipconfig'
+# Function for validate ip address
+# Return True or False
+#
+# Use: isIP '1.1.1.1'
+#
+# OR
+#
+# Use: isIP $AnyIpAddress
+Function isIP
+{
+  Param( [string]$ip )
+  If ( $ip -match '^\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}$' )
+  {
+    return $True
+  }
+  else
+  {
+    return $False
+  }
+}
 
-echo "###############################################################'CLI1: Ping allow'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM CLI1 -Command 'ping R1.kazan.wsr'
+# TODO: 3. Start of check
 
-echo "###############################################################'DC1: Domain Kazan.wsr'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'Get-ADDomainController | findstr ComputerObjectDN'
+# Set STAND_NUMBER
+If ( $args[0] -is [int] )
+{
+  $STAND = $args[0]
+}
+else
+{
+  Do
+  {
+    $STAND = Read-Host "Stand number"
+  } until ( $STAND -is [int] -eq $False )
+}
 
-echo "###############################################################'SRV1: Secondary domain controller + RODC'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'Get-ADDomainController | findstr IsReadOnly'
+# Set COMPETITOR
+If ( $args[1] -is [string] )
+{
+  $COMPETITOR = $args[1]
+}
+else
+{
+  Do
+  {
+    $COMPETITOR = Read-Host "Competitor FirstnameLastname"
+  } until ( $COMPETITOR.length -ge 2 )
+}
 
-echo "###############################################################'DC1: DNS service zone and records'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-dnsserverresourcerecord -ZoneName kazan.wsr | findstr "A CNAME"'
+# Set SERVER_IP
+If ( isIp $args[2] )
+{
+  $SERVER_IP = $args[2]
+}
+else
+{
+  Do
+  {
+    $SERVER_IP = Read-Host "IP address ESXi"
+  } until ( isIP $SERVER_IP -eq $False )
+}
 
+# Create output file
+$FILE = [string]$STAND + '_RESULT' + '.txt'
+Write-Output '' > $FILE
 
-echo "###############################################################'DC1: Domain clients'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'Get-ADComputer -Filter * | findstr SamAccountName'
+# Connect to Server and ignore invalid certificate
+Set-PowerCLIConfiguration -DefaultVIServerMode Multiple     `
+                          -InvalidCertificateAction Ignore  `
+                          -Confirm:$false
+Connect-VIServer -Server $SERVER_IP -User $LOGIN_ESXi -Password $PASS_ESXi
 
-echo "###############################################################'DC1: Domain group'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'net group'
+# Start all VMs and delay for VM power on
+Get-VM | Where-Object { $_.PowerState -eq 'PoweredOff' } | Start-VM
+Start-Sleep -s $DELAY
 
-echo "###############################################################'DC1: 60 users with correct names and passwords exists'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'Get-ADUser -Filter {Name -Like "IT*"} | findstr SamAccountName'
-SendCommand -VM DC1 -Command 'Get-ADUser -Filter {Name -Like "Sales*"} | findstr SamAccountName'
+###########################--=START=--##################################
 
-echo "###############################################################'DC1: Corret users in correct groups'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'Get-ADGroupMember -Identity IT | FindStr SamAccountName'
+$DATE = Get-Date
+Write-Output $DATE        | Out-File $FILE -Append -NoClobber
+Write-Output $COMPETITOR  | Out-File $FILE -Append -NoClobber
 
-echo "###############################################################'DC1: No first sign animation'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendScript -VM 'DC1'                         `
+           -Script 'ipconfig'                `
+           -Description 'Network interface configuration'
 
-echo "###############################################################'DC1: Default Home Page for Edge and IE'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendScript -VM 'CLI1'                         `
+           -Script 'ping R1.kazan.wsr'                `
+           -Description 'Ping allow'
 
-echo "###############################################################'DC1: Local admin GPO'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADDomainController | findstr ComputerObjectDN'                `
+           -Description 'Domain Kazan.wsr'
 
-echo "###############################################################'DC1: Shares message'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendScript -VM 'SRV1'                         `
+           -Script 'Get-ADDomainController | findstr IsReadOnly'                `
+           -Description 'RODC'
 
-echo "###############################################################'DC1: DHCP service scope'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'Get-DhcpServerv4Scope'
+SendScript -VM 'DC1'                         `
+           -Script 'get-dnsserverresourcerecord -ZoneName kazan.wsr | findstr "A CNAME"'                `
+           -Description 'DNS service and zone records'
 
-echo "###############################################################'DC1: Sleep mode'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-DhcpServerv4Scope'                `
+           -Description 'DHCP'
 
-echo "###############################################################'DC1: Shortcut fo Calc'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADComputer -Filter * | findstr SamAccountName'                `
+           -Description 'Domain clients'
 
-echo "###############################################################'CLI1: Home folder'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM CLI1 -Command 'net use U: \\srv1\IT_1'
+SendScript -VM 'DC1'                         `
+           -Script 'net group'                `
+           -Description 'Domain groups'
 
-echo "###############################################################'SRV1: Secondary domain controller'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'Get-ADDomainController | findstr ComputerObjectDN'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADUser -Filter {Name -Like "IT*"} | findstr SamAccountName'                `
+           -Description '60 users with correct names and passwords exists (IT)' 
 
-echo "###############################################################'SRV1: RAID-5'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'echo "list volume" | out-file C:\script.txt -Encoding utf8'
-SendCommand -VM SRV1 -Command 'diskpart /s C:\script.txt'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADUser -Filter {Name -Like "Sales*"} | findstr SamAccountName'                `
+           -Description '60 users with correct names and passwords exists (Sales)'
 
-echo "###############################################################'SRV1: Secondary DNS'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'Get-DNSServerZone'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADGroupMember -Identity IT | FindStr SamAccountName'               `
+           -Description 'Correct users in correct groups (IT)' 
 
-echo "###############################################################'SRV1: Shared folders'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'net share'
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADGroupMember -Identity Sales | FindStr SamAccountName'               `
+           -Description 'Correct users in correct groups (Sales)' 
 
-echo "###############################################################'SRV1: Department folder'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'net share'
+SendScript -VM 'DC1'                         `
+           -Script 'get-gporeport -all -path c:\gpo.xml -reporttype xml; [xml] $gpo = Get-Content c:\gpo.xml; $gpo.report.GPO.Computer.extensiondata.extension.policy | Format-Table -AutoSize -Property State,Name'                `
+           -Description 'All group polices'
 
-echo "###############################################################'SRV1: Quota'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'Get-FSRMQuota'
+SendScript -VM 'CLI1'                         `
+           -Script 'net use U: \\srv1\IT_1'                `
+           -Description 'Home folder (See already in use message)'
 
-echo "###############################################################'SRV1: File screen'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'Get-FSRMFileScreen'
+SendScript -VM 'SRV1'                         `
+           -Script 'Get-ADDomainController | findstr ComputerObjectDN'                `
+           -Description 'Secondary domain controller' 
 
-echo "###############################################################'CLI1: www.Kazan.wsr'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM CLI1 -Command 'Invoke-WebRequest -Uri https://www.kazan.wsr -UseBasicParsing'
-SendCommand -VM CLI1 -Command 'Invoke-WebRequest -Uri https://kazan.wsr -UseBasicParsing'
+SendScript -VM 'SRV1'                         `
+           -Script 'echo "list volume" | out-file C:\script.txt -Encoding utf8'                `
+           -Description  ' '
 
-echo "###############################################################'SRV1: DHCP-failover'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM SRV1 -Command 'Get-DhcpServerv4Failover'
+SendScript -VM 'SRV1'                         `
+           -Script 'diskpart /s C:\script.txt'                `
+           -Description  'RAID-5'
 
-echo "###############################################################'DCA: AD CS - installed'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DCA -Command 'Get-WindowsFeature Ad-Certificate'
+SendScript -VM 'SRV1'                         `
+           -Script 'Get-DNSServerZone | findstr Secondary'                `
+           -Description 'Secondary DNS'
 
-echo "###############################################################'DCA: AD CS - CS name'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DCA -Command 'certutil -dump'
+SendScript -VM 'SRV1'                         `
+           -Script 'net share'               `
+           -Description 'Shared folders' 
 
-echo "###############################################################'DCA: AD CS - CS Lifetime'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DCA -Command 'certutil -dump'
+SendScript -VM 'SRV1'                         `
+           -Script 'tree D:'                `
+           -Description 'Department folders'
 
-echo "###############################################################'DCA: AD CS - Templates'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DCA -Command 'certutil -template ITUsers'
+SendScript -VM 'SRV1'                         `
+           -Script 'Get-FSRMQuota'                `
+           -Description 'Quota'
 
-echo "###############################################################'DC1: Static route is working'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'ping SPB.wse'
+SendScript -VM 'SRV1'                         `
+           -Script 'Get-FSRMFileScreen'               `
+           -Description 'File screen'
 
-echo "###############################################################'DC2: Domain SPB.wse'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC2 -Command 'Get-ADDomainController'
+SendScript -VM 'CLI1'                         `
+           -Script 'Invoke-WebRequest -Uri https://www.kazan.wsr -UseBasicParsing'                `
+           -Description 'www.Kazan.wsr'
 
-echo "###############################################################'DC2: Network interface configuration'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC2 -Command 'ipconfig'
+SendScript -VM 'CLI1'                         `
+           -Script 'Invoke-WebRequest -Uri https://kazan.wsr -UseBasicParsing'                `
+           -Description 'Kazan.wsr'
 
-echo "###############################################################'CLI2: Roaming profiles'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM CLI2 -Command 'login with user1 > Echo $profile'
+SendScript -VM 'SRV1'                         `
+           -Script 'Get-DhcpServerv4Failover'                `
+           -Description 'DHCP-failover'
 
-echo "###############################################################'CLI2: Roaming profiles correct access'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM CLI2 -Command 'login with user1 > Echo $profile'
+SendScript -VM 'DCA'                         `
+           -Script 'Get-WindowsFeature Ad-Certificate'                `
+           -Description 'ADCS installed'
 
-echo "###############################################################'DC1: Domain trust'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM DC1 -Command 'test-computersecurechannel spb.wse'
+SendScript -VM 'DCA'                         `
+           -Script 'certutil | findstr Name'                `
+           -Description 'ADCS - CS Name'
 
-echo "###############################################################'CLI1: www.spb.wse'#########################################################################" | Out-File $DIR -Append -NoClobber
-SendCommand -VM CLI1 -Command 'Invoke-WebRequest -Uri https://www.spb.wse -UseBasicParsing'
-SendCommand -VM CLI1 -Command 'Invoke-WebRequest -Uri https://spb.wse -UseBasicParsing'
+SendScript -VM 'DCA'                         `
+           -Script 'certutil -tcainfo | findstr NotAfter'                `
+           -Description 'ADCS - Validatity period' 
+
+SendScript -VM 'DCA'                         `
+           -Script 'certutil -tcainfo | FindStr "["'                `
+           -Description 'ADCS - Templates' 
+
+SendScript -VM 'DC1'                         `
+           -Script 'ping SPB.wse'                `
+           -Description 'Static route is working' 
+
+SendScript -VM 'DC2'                         `
+           -Script 'Get-ADDomainController'                `
+           -Description 'Domain SPB.wse' 
+
+SendScript -VM 'DC2'                         `
+           -Script 'ipconfig'                `
+           -Description 'Network interface configuration' 
+
+SendScript -VM 'CLI2'                         `
+           -Script 'Get-WmiObject Win32_UserProfile | FindStr RoamingPath'                `
+           -Description 'Roaming profiles'             `
+           -Username 'User1'                 `
+           -Password 'P@ssw0rd'
+
+SendScript -VM 'CLI2'                         `
+           -Script 'net use X: \\SRV2.spb.wse\profiles\; tree X:'                `
+           -Description 'Roaming profiles correct access (See only user1 profile folder)'             `
+           -Username 'User1'                 `
+           -Password 'P@ssw0rd'
+
+SendScript -VM 'DC1'                         `
+           -Script 'Get-ADTrust -Filter * | findstr "Direction Source Target ForestTransitive"'                `
+           -Description 'Domain Trusts'
+
+SendScript -VM 'CLI1'                         `
+           -Script 'Invoke-WebRequest -Uri https://www.spb.wse -UseBasicParsing'                `
+           -Description 'www.spb.wse' 
+
+SendScript -VM 'CLI1'                         `
+           -Script 'Invoke-WebRequest -Uri https://www.spb.wse -UseBasicParsing'                `
+           -Description 'spb.wse' 
