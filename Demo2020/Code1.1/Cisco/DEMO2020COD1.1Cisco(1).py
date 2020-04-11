@@ -121,6 +121,7 @@ for host in DEVICES_NAME:
     if host == 'HQ1':
         username = 'radius'
         password = 'cisco'
+        print('jopa')
     else:
         username = USER
         password = PASSWORD        
@@ -162,6 +163,104 @@ SendCommand(hosts, commands, description)
 # TODO: C1.2 Domain name
 
 hosts       = ['SW2', 'SW3']
-commands    = ['sh run | i domain name']
-description = 'Hostname'
+commands    = ['sh run | i ip domaine']
+description = 'Domain name'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.3 Local user
+
+hosts       = ['FW1', 'SW1']
+commands    = ['sh run | i username']
+description = 'Local user'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.4 Enable password
+
+hosts       = ['SW2', 'BR1']
+commands    = ['sh run | i enable secret']
+description = 'Enable password'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.5 Password encryption
+
+hosts       = ['SW1', 'BR1']
+commands    = ['sh run | i ip domaine']
+description = 'Password encryption'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.6 Local AAA
+
+hosts       = ['HQ1', 'FW1']
+commands    = ['sh run | i aaa']
+description = 'Local AAA'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.7 IPv4 addressing and connectivity
+
+hosts       = ['HQ1']
+commands    = ['ping 8.8.8.8 source 30.78.21.1']
+description = 'IPv4 addressing and connectivity'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.8 IPv6 addressing and connectivity
+
+hosts       = ['HQ1']
+commands    = ['ping 2001:A:B:ACAD::10 source 2001:A:B:DEAD::1']
+description = 'IPv6 addressing and connectivity'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.9 Radius auth
+
+hosts       = ['HQ1']
+commands    = ['test aaa group radius server 172.16.20.20 auth-port 1812 acct-port 1813 radius cisco legacy']
+description = 'Radius auth'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.10 Remote management
+
+hosts       = ['SW1', 'BR1']
+commands    = ['sh ip ssh']
+description = 'Remote management'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.11 VTP Server
+
+hosts       = ['SW1']
+commands    = ['show vtp status | i Operating Mode']
+description = 'VTP Server'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.12 VTP Client
+
+hosts       = ['SW2', 'SW3']
+commands    = ['show vtp status | i Operating Mode']
+description = 'VTP Client'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.13 DTP manipulation
+
+hosts       = ['SW1', 'SW2', 'SW3']
+commands    = ['show int trun | i trunking']
+description = 'DTP manipulation'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.14 Etherchannel LACP
+
+hosts       = ['SW1', 'SW2']
+commands    = ['sh ether sum | i LACP', 'sh ether detail | i Channel group = 1']
+description = 'Etherchannel LACP'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.15 Etherchannel PAgP
+
+hosts       = ['SW1', 'SW2']
+commands    = ['sh ether sum | i PAgP', 'sh ether detail | i Channel group = 2']
+description = 'Etherchannel PAgP'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.16 STP enable
+
+hosts       = ['SW1', 'SW2', 'SW3']
+commands    = ['sh span | i protocol']
+description = 'STP enable'
 SendCommand(hosts, commands, description)

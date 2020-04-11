@@ -56,3 +56,5 @@ There are also variables that have a default value, they are provided below (if 
 * **ENABLE_PASS** - _string_ Exec password on network device
 * **SSH_PORT** - _integer_ Port for create SSH conection **Default** `22`
 > The USER, PASSWORD, ENABLE_PASS is set correctly and depends on the event
+
+### Second version has name *Cisco(2).py and works from anywhere, the main thing is to have access to the console server
