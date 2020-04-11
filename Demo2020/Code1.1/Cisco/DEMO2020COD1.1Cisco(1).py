@@ -23,7 +23,9 @@ import time
 import sys
 from netmiko import ConnectHandler
 # How to install netmiko:
+# pip install netmiko
 # https://www.jaacostan.com/2018/09/how-to-install-netmiko-on-windows.html
+# https://pypi.org/project/netmiko/
 
 # TODO: 1. Init
 
@@ -116,12 +118,18 @@ DEAD_DEVICES = list()
 
 # Create conn dictionary
 for host in DEVICES_NAME:
+    if host == 'HQ1':
+        username = 'radius'
+        password = 'cisco'
+    else:
+        username = USER
+        password = PASSWORD        
     for ip in IP_ADDRESSES[host]:
         try:
             DEVICES_PARAMS = {  'device_type'   :   'cisco_ios'   ,
                                 'ip'            :   ip            ,
-                                'username'      :   USER          ,
-                                'password'      :   PASSWORD      ,
+                                'username'      :   username      ,
+                                'password'      :   password      ,
                                 'secret'        :   ENABLE_PASS   ,
                                 'port'          :   SSH_PORT
                                 }
@@ -154,6 +162,6 @@ SendCommand(hosts, commands, description)
 # TODO: C1.2 Domain name
 
 hosts       = ['SW2', 'SW3']
-commands    = ['sh run | i domain lname']
+commands    = ['sh run | i domain name']
 description = 'Hostname'
 SendCommand(hosts, commands, description)
