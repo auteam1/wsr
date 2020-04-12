@@ -358,144 +358,62 @@ SendScript -VM 'OUT-CLI'                              `
 
 # TODO: A4.1 Apache: Port, PHP
 SendScript -VM 'R-SRV'                                `
-           -Script 'ssh ssh_p@l-fw.skill39.wsr'       `
-           -Description 'SSH: Key authentication'
+           -Script 'netstat -tulpn'                   `
+           -Description 'Apache: Port, PHP'
 
+# TODO: A4.2 rsync: L-SRV configuration
+$SCRIPT = 'cat /etc/rsyncd.conf; systemctl status rsync | grep Active'
+SendScript -VM 'L-SRV'                                `
+           -Script $SCRIPT                            `
+           -Description 'rsync: L-SRV configuration'
+
+# TODO: A4.3 rsync: Client sync 
+# 1. Create file
+$SCRIPT = 'rm -rf /opt/sync/*; echo rsync work! > /opt/sync/aasdfljaxczvi123; ls -las /opt/sync'
+SendScript -VM 'L-SRV'                                `
+           -Script $SCRIPT                            `
+           -Description 'rsync: Client sync'
+           
+# 2. Check sync
+$SCRIPT = 'cat /root/sync.sh; ls -las /root/sync/; sleep 61; ls -las /root/sync'
+SendScript -VM 'L-CLI-A','L-CLI-B'                    `
+           -Script $SCRIPT                            `
+        
+# TODO: A5.1 OpenSSL: CA
+$SCRIPT = 'ls -las /etc/ca; cat /etc/ca/index.txt'
+SendScript -VM 'R-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'OpenSSL: CA'
+
+# TODO: A5.2 Certificate Attributes
+$SCRIPT = 'head /etc/ca/cacert.pem'
+SendScript -VM 'R-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'Certificate Attributes'
+
+# TODO: A5.3 IPTables: Block traffic
+$SCRIPT = 'iptables -t filter -L -v | grep Chain'
+SendScript -VM 'L-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'IPTables: Block traffic'
+
+# TODO: A5.4 IPTables: Allow only nessesary traffic
+$SCRIPT = 'iptables -t filter -L -v'
+SendScript -VM 'L-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'IPTables: Allow only nessesary traffic'
+
+# TODO: A5.5 Firewalld: Block traffic 
+$SCRIPT = 'firewall-cmd --list-all'
+SendScript -VM 'L-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'IPTables: Allow only nessesary traffic'
+
+# TODO: A5.6 Firewalld: Allow only nessesary traffic
+$SCRIPT = 'ip r | grep default; firewall-cmd --list-all'
+SendScript -VM 'L-FW'                                 `
+           -Script $SCRIPT                            `
+           -Description 'IPTables: Allow only nessesary traffic'
 
 $DATE = Get-Date
 Write-Output $DATE        | Out-File $FILE -Append -NoClobber
-
-
-# echo "###############################################################'L-SRV' RAID#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $LSRV -ScriptText "lsblk" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-SRV RAID Script lsblk') | Out-File $FILE
-#
-#
-# echo "###############################################################'R-RTR' LVM: Volume LVM: Snapshots LVM: Snapshot Filename#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#         Invoke-VMScript -vm $RRTR -ScriptText "lvs; lvdisplay" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'R-RTR LVM: Volume LVM: Snapshots LVM: Snapshot Filename Script lvs; lvdisplay') | Out-File $FILE
-#
-#
-# echo "###############################################################'L-CLI-A L-SRV L-CLI-B' RSYNC: Sync#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $LCLIA -ScriptText "cp /etc/passwd /root/sync/cli_to_srv.test && sleep 90" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'LCLIA RSYNC: Sync Script cp /etc/passwd /root/sync/cli_to_srv.test && sleep 90') | Out-File $FILE
-#
-#
-#  Invoke-VMScript -vm $LSRV -ScriptText "ls /opt/sync" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'LSRV RSYNC: Sync Script ls /opt/sync') | Out-File $FILE
-#
-#  Invoke-VMScript -vm $LCLIB -ScriptText "ls /opt/sync" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'LCLIB RSYNC: Sync Script ls /opt/sync') | Out-File $FILE
-#
-#
-#  echo "###############################################################'L-CLI-A L-SRV L-CLI-B' RSYNC: Delete Sync#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $LCLIA -ScriptText "rm -f /root/sync/cli_to_srv.test && sleep 90" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'LCLIA RSYNC: Delete Sync Script rm -f /root/sync/cli_to_srv.test && sleep 90') | Out-File $FILE
-#
-#
-#  Invoke-VMScript -vm $LSRV -ScriptText "ls /opt/sync" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-SRV RSYNC: Delete Sync Script ls /opt/sync') | Out-File $FILE
-#
-#  Invoke-VMScript -vm $LCLIB -ScriptText "ls /opt/sync" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-B RSYNC: Delete Sync Script ls /opt/sync') | Out-File $FILE
-#
-#   Invoke-VMScript -vm $LCLIA -ScriptText "ls /opt/sync" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-A RSYNC: Delete Sync Script ls /opt/sync') | Out-File $FILE
-#
-#   echo "###############################################################'L-CLI-A L-SRV 'RSYNC: Security#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $LSRV -ScriptText "cat /etc/rsyncd.conf" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-SRV  RSYNC: Security Script cat /etc/rsyncd.conf') | Out-File $FILE
-#
-#  Invoke-VMScript -vm $LCLIA -ScriptText "cat /root/sync.sh" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-A  RSYNC: Security Script cat /root/sync.sh') | Out-File $FILE
-#
-#  Invoke-VMScript -vm $LCLIA -ScriptText "crontab -l" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-#  (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-A  RSYNC: Security Script crontab -l') | Out-File $FILE
-#
-# echo "###############################################################L-CLI-A AND R-CLI AND OUT-CLI and L-CLI-B' Web: http/s intra.skill39.wsr , http/s www.skill39.wsr , Web: Trusted SSL , Web: http –> https Web: http://www.skill39.wsr/  : Static content Web: http://www.skill39.wsr/date.php  : PHP content #########################################################################" | Out-File $FILE -Append -NoClobber
-#
-# Invoke-VMScript -vm $LCLIA -ScriptText "curl -L http://intra.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-A Web: http/s intra.skill39.wsr, Web: Trusted SSL , Web: http –> https Script curl -L http://intra.skill39.wsr ') | Out-File $FILE
-#
-# Invoke-VMScript -vm $LCLIB -ScriptText "curl -L http://intra.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-B Web: http/s intra.skill39.wsr , Web: Trusted SSL , Web: http –> https Script curl -L http://intra.skill39.wsr') | Out-File $FILE
-#
-# Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://intra.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI Web: http/s intra.skill39.wsr , Web: Trusted SSL , Web: http –> https Script curl -L http://intra.skill39.wsr') | Out-File $FILE
-#
-# Invoke-VMScript -vm $RCLI -ScriptText "curl -L http://intra.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-CLI Web: http/s intra.skill39.wsr , Web: Trusted SSL , Web: http –> https Script curl -L http://intra.skill39.wsr') | Out-File $FILE
-#
-# Invoke-VMScript -vm $LCLIA -ScriptText "curl -L http://www.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-A Web: http/s www.skill39.wsr, Web: Trusted SSL , Web: http –> https Script curl -L http://www.skill39.wsr ') | Out-File $FILE
-#
-# Invoke-VMScript -vm $LCLIB -ScriptText "curl -L http://www.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'L-CLI-B Web: http/s www.skill39.wsr , Web: Trusted SSL , Web: http –> https Script curl -L http://www.skill39.wsr') | Out-File $FILE
-#
-# Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI Web: http/s www.skill39.wsr , Web: Trusted SSL , Web: http –> https Script curl -L http://www.skill39.wsr') | Out-File $FILE
-#
-# Invoke-VMScript -vm $RCLI -ScriptText "curl -L http://www.skill39.wsr" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-CLI Web: http/s www.skill39.wsr , Web: Trusted SSL , Web: http –> https Script curl -L http://www.skill39.wsr') | Out-File $FILE
-#
-# Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr/index.html" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI Web: http://www.skill39.wsr/  : Static content') | Out-File $FILE
-#
-#  Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr/date.php" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI  Web: http://www.skill39.wsr/date.php  : PHP content') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' NGINX: Proxy#########################################################################" | Out-File $FILE -Append -NoClobber
-#  Invoke-VMScript -vm $RFW -ScriptText "cat /etc/nginx/conf.d/task.conf" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-FW NGINX: Proxy Script cat /etc/nginx/conf.d/task.conf') | Out-File $FILE
-#
-# echo "###############################################################'OUT-CLI' NGINX: SSL and ReFILEection#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr/index.html" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI  Web: http://www.skill39.wsr/index.html NGINX: SSL and ReFILEection') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' NGINX: Backend Health check#########################################################################" | Out-File $FILE -Append -NoClobber
-#  Invoke-VMScript -vm $RFW -ScriptText "cat /etc/nginx/conf.d/task.conf" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-FW NGINX: Backend Health check Script cat /etc/nginx/conf.d/task.conf') | Out-File $FILE
-#
-# echo "###############################################################'R-FW OUT-CLI R-SRV' NGINX: Caching capability#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $RFW -ScriptText "cat /etc/nginx/conf.d/task.conf" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-FW NGINX: Caching capability Script cat /etc/nginx/conf.d/task.conf') | Out-File $FILE
-#
-# Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr/date.php  && sleep 10 curl -L http://www.skill39.wsr/date.php" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI  NGINX: Caching capability Script curl -L http://www.skill39.wsr/date.php  && sleep 10 curl -L http://www.skill39.wsr/date.php') | Out-File $FILE
-#
-# Invoke-VMScript -vm $RSRV -ScriptText "echo 'SECRET_STRING' >> /var/www/html/out/secret.txt" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-SRV  NGINX: Caching capability Script echo "SECRET_STRING" >> /var/www/html/out/secret.txt') | Out-File $FILE
-#
-# Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr/secret.txt" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI  NGINX: Caching capability Script curl -L http://www.skill39.wsr/secret.txt') | Out-File $FILE
-#
-# Invoke-VMScript -vm $RSRV -ScriptText "rm -f /var/www/html/out/secret.txt" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-SRV  NGINX: Caching capability Script rm -f /var/www/html/out/secret.txt ') | Out-File $FILE
-#
-# Invoke-VMScript -vm $OUTCLI -ScriptText "curl -L http://www.skill39.wsr/secret.txt  && sleep 50  && curl -L http://www.skill39.wsr/secret.txt" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'OUT-CLI  NGINX: Caching capability Script curl -L http://www.skill39.wsr/secret.txt  && sleep 50  && curl -L http://www.skill39.wsr/secret.txt') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' OpenSSL: CA#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $RFW -ScriptText "ls /etc/ca; openssl ca" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-FW OpenSSL: CA Script ls /etc/ca') | Out-File $FILE
-#
-# echo "###############################################################'R-FW' Certificate Attributes#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#  Invoke-VMScript -vm $RFW -ScriptText "cat /etc/ca/cacert.pem" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-FW Certificate Attributes Script cat /etc/ca/cacert.pem') | Out-File $FILE
-#
-# echo "###############################################################'L-FW R-FW' IPTables: Block input traffic IPTables: DNS port forwarding IPTables: Allow GRE & IPSec IPTables: Allow SSH IPTables: Allow VPN IPTables: No Access to www.skill39.wsr via OpenVPN IPTables: HTTP/HTTPS#########################################################################" | Out-File $FILE -Append -NoClobber
-#
-#   Invoke-VMScript -vm $RFW -ScriptText "iptables -L -v -n -t filter; iptables -L -v -n -t nat" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'R-FW IPTables: Block input traffic IPTables: DNS port forwarding IPTables: Allow GRE & IPSec IPTables: Allow SSH IPTables: Allow VPN IPTables: No Access to www.skill39.wsr via OpenVPN IPTables: HTTP/HTTPS Script iptables -L -v -n -t filter; iptables -L -v -t nat') | Out-File $FILE
-#
-# Invoke-VMScript -vm $LFW -ScriptText "iptables -L -v -n -t filter; iptables -L -v -n -t nat" -GuestUser 'root' -GuestPassword 'toor' -ScriptType Bash | Out-File $FILE -Append -NoClobber
-# (Get-Content $FILE).replace('ScriptOutput', 'L-FW IPTables: Block input traffic IPTables: DNS port forwarding IPTables: Allow GRE & IPSec IPTables: Allow SSH IPTables: Allow VPN IPTables: No Access to www.skill39.wsr via OpenVPN IPTables: HTTP/HTTPS Script iptables -L -v -n -t filter; iptables -L -v -t nat') | Out-File $FILE
