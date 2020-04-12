@@ -80,7 +80,7 @@ def SendCommand(host_arr, command_arr, description):
         Write('Script	     : ' + command + '\n\n')
         for host in host_arr:
             Write('Device       : ' + host)    
-            Write('ScriptOutput : ' + con[host].send_command(command) + '\n\n\n')
+            Write(con[host].send_command(command) + '\n\n\n')
 
 # TODO: 3. Start of check
 
@@ -110,7 +110,6 @@ except:
 
 # Create result file and define Script Start Time
 openedFile  = open( str(STAND_NUMBER) + "_RESULT" + ".txt", "w")
-startTime   = time.time() 
 con = {}
 
 # Empty list with dead devices
@@ -121,7 +120,6 @@ for host in DEVICES_NAME:
     if host == 'HQ1':
         username = 'radius'
         password = 'cisco'
-        print('jopa')
     else:
         username = USER
         password = PASSWORD        
@@ -144,13 +142,11 @@ for host in DEVICES_NAME:
                 Write('Not connected to ' + host)
                 break            
             continue
-# Time to connect on all devices
-print(int(time.time() - startTime))
 
 #############################--=START=--####################################
 
-now = datetime.datetime.now()
-Write('\n\n' + now.strftime("%Y-%m-%d %H:%M") + '\n\n')
+start = datetime.datetime.now()
+Write('\n\n' + start.strftime("%Y-%m-%d %H:%M") + '\n\n')
 Write(COMPETITOR)
 
 # TODO: C1.1 Hostname
@@ -163,14 +159,14 @@ SendCommand(hosts, commands, description)
 # TODO: C1.2 Domain name
 
 hosts       = ['SW2', 'SW3']
-commands    = ['sh run | i ip domaine']
+commands    = ['sh run | i ip domain']
 description = 'Domain name'
 SendCommand(hosts, commands, description)
 
 # TODO: C1.3 Local user
 
 hosts       = ['FW1', 'SW1']
-commands    = ['sh run | i username']
+commands    = ['sh run | i username ' + USER]
 description = 'Local user'
 SendCommand(hosts, commands, description)
 
@@ -184,7 +180,7 @@ SendCommand(hosts, commands, description)
 # TODO: C1.5 Password encryption
 
 hosts       = ['SW1', 'BR1']
-commands    = ['sh run | i ip domaine']
+commands    = ['sh run | i service password']
 description = 'Password encryption'
 SendCommand(hosts, commands, description)
 
@@ -219,7 +215,7 @@ SendCommand(hosts, commands, description)
 # TODO: C1.10 Remote management
 
 hosts       = ['SW1', 'BR1']
-commands    = ['sh ip ssh']
+commands    = ['sh ip ssh | i version']
 description = 'Remote management'
 SendCommand(hosts, commands, description)
 
@@ -253,7 +249,7 @@ SendCommand(hosts, commands, description)
 
 # TODO: C1.15 Etherchannel PAgP
 
-hosts       = ['SW1', 'SW2']
+hosts       = ['SW1', 'SW3']
 commands    = ['sh ether sum | i PAgP', 'sh ether detail | i Channel group = 2']
 description = 'Etherchannel PAgP'
 SendCommand(hosts, commands, description)
@@ -264,3 +260,267 @@ hosts       = ['SW1', 'SW2', 'SW3']
 commands    = ['sh span | i protocol']
 description = 'STP enable'
 SendCommand(hosts, commands, description)
+
+# TODO: C1.17 STP root priority
+
+hosts       = ['SW1', 'SW2']
+commands    = ['sh span | i VLAN|Root ID|This']
+description = 'STP root priority'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.18 STP portfast
+
+hosts       = ['SW1']
+commands    = ['sh spanning-tree interface fastEthernet 1/0/1 portfast']
+description = 'STP portfast'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.19 VLAN port assignment
+
+hosts       = ['SW2', 'SW3']
+commands    = ['sh ip int b | i 0/10', 'sh vl b | i 0/10']
+description = 'VLAN port assignment'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.20 HQ1 FW1 trunk
+
+hosts       = ['FW1']
+commands    = ['sh sw vl', 'sh run int e0/2']
+description = 'HQ1 FW1 trunk'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.21 SW1 interface shutdown
+
+hosts       = ['SW1']
+commands    = ['sh ip int b | i 24']
+description = 'SW1 interface shutdown'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.22 Shutdown unused ports
+
+hosts       = ['SW1', 'SW2', 'SW3']
+commands    = ['sh ip int b | i administratively down']
+description = 'Shutdown unused ports'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.23 Vlan unused ports
+
+hosts       = ['SW1', 'SW2', 'SW3']
+commands    = ['sh vl b | s 600']
+description = 'Vlan unused ports'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.24 FW IPoE ISP1
+
+hosts       = ['FW1']
+commands    = ['sh int ip b ']
+description = 'FW IPoE ISP1'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.25 FW IPoE ISP2
+
+hosts       = ['FW1']
+commands    = ['sh int ip b']
+description = 'FW IPoE ISP2'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.26 L2 VPN ISP3
+
+hosts       = ['BR1']
+commands    = ['ping 172.16.3.2', 'ping 172.16.3.1']
+description = 'L2 VPN ISP3'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.27 PPP Multilink
+
+hosts       = ['BR1']
+commands    = ['show ppp multilink', 'show ip int b | i Multilink']
+description = 'PPP Multilink'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.28 BR1 HDLC ISP1
+
+hosts       = ['BR1']
+commands    = ['sh int Serial0/2/0 | i Encap|Serial0/2/0', 'sh ip int Serial0/2/0 | i Address']
+description = 'BR1 HDLC ISP1'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.29 OSPF neighbors
+
+hosts       = ['HQ1']
+commands    = ['sh ip ospf neighbors']
+description = 'OSPF neighbors'
+SendCommand(hosts, commands, description)
+
+hosts       = ['FW1']
+commands    = ['sh ospf neighbors']
+SendCommand(hosts, commands, False)
+
+# TODO: C1.30 OSPF routes
+
+hosts       = ['HQ1']
+commands    = ['sh ip route ospf | b Gateway']
+description = 'OSPF routes'
+SendCommand(hosts, commands, description)
+
+hosts       = ['FW1']
+commands    = ['sh route ospf | b Gateway']
+SendCommand(hosts, commands, False)
+
+# TODO: C1.31 OSPF passive interface
+
+hosts       = ['HQ1']
+commands    = ['sh ip proto | s ospf']
+description = 'OSPF passive interface'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.32 OSPF BR1
+
+hosts       = ['BR1']
+commands    = ['sh ip proto | s ospf', 'sh ip ospf ne', 'sh ip route ospf | b Gateway']
+description = 'OSPF passive interface'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.33 BGP HQ1
+
+hosts       = ['HQ1']
+commands    = ['sh ip bgp sum', 'sh ip bgp | b Network', 'sh ip route bgp | b Gateway']
+description = 'BGP HQ1'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.34 BGP FW1
+
+hosts       = ['FW1']
+commands    = ['sh bgp sum', 'sh bgp | b Network', 'sh route bgp | b Gateway']
+description = 'BGP FW1'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.35 BGP BR1
+
+hosts       = ['BR1']
+commands    = ['sh ip bgp sum', 'sh ip bgp | b Network', 'sh ip route bgp | b Gateway']
+description = 'BGP BR1'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.36 EIGRP neighbors
+
+hosts       = ['HQ1', 'BR1']
+commands    = ['sh ip eigrp neighbors']
+description = 'EIGRP neighbors'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.37 EIGRP routes
+
+hosts       = ['HQ1', 'BR1']
+commands    = ['sh ip route eigrp']
+description = 'EIGRP routes'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.38 NTP
+
+hosts       = ['BR1', 'SW1', 'HQ1']
+commands    = ['sh ntp as', 'sh run | i timezone', 'sh clock']
+description = 'NTP'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.39 NAT HQ1
+
+hosts       = ['HQ1']
+commands    = ['-']
+description = '-'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.40 NAT BR1
+
+hosts       = ['BR1']
+commands    = ['-']
+description = '-'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.41 DHCP
+
+hosts       = ['HQ1']
+commands    = ['sh ip dhcp bind', 'sh run | s dhcp']
+description = 'DHCP'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.42 PPPoE server
+
+hosts       = ['BR1']
+commands    = ['sh pppoe summ', 'sh ppp all']
+description = 'PPPoE server'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.43 PPPoE session
+
+hosts       = ['BR1']
+commands    = ['sh pppoe summ', 'sh ppp all']
+description = 'PPPoE server'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.44 User1 privilege
+
+hosts       = ['BR1']
+commands    = ['sh run | i user1', 'sh run | i privilege exec level 5']
+description = 'User1 privilege'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.45 User2 view
+
+hosts       = ['BR1']
+commands    = ['sh run | i user2', 'sh run | s view']
+description = 'User2 view'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.46 Port Security
+
+hosts       = ['SW2']
+commands    = ['sh port-security interface fastEthernet 0/10']
+description = 'Port Security'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.47 Syslog
+
+hosts       = ['HQ1', 'FW1']
+commands    = ['sh run | i logging']
+description = 'Syslog'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.48 SNMP
+
+hosts       = ['HQ1', 'FW1']
+commands    = ['sh run | i snmp']
+description = 'SNMP'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.49 Archive
+
+hosts       = ['HQ1']
+commands    = ['sh run | s archive']
+description = 'Archive'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.50 GRE tunnel ipv4
+
+hosts       = ['HQ1', 'BR1']
+commands    = ['sh run int tun1', 'ping 172.16.1.1', 'ping 172.16.1.2']
+description = 'GRE tunnel ipv4'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.51 GRE tunnel ipv6
+
+hosts       = ['HQ1', 'BR1']
+commands    = ['ping 2001::1', 'ping 2001::2']
+description = 'GRE tunnel ipv6'
+SendCommand(hosts, commands, description)
+
+# TODO: C1.52 GRE protection tunnel
+
+hosts       = ['HQ1', 'BR1']
+commands    = ['sh ip int b | i Tunnel1', 'sh crypto isakmp key', 'sh crypto isakmp policy', 'sh crypto isakmp sa', 'sh crypto ipsec sa | i inbound esp|outbound esp|Status']
+description = 'x'
+SendCommand(hosts, commands, description)
+
+end = datetime.datetime.now()
+Write('\n\n Start time:' + start.strftime("%Y-%m-%d %H:%M") + '\n\n')
+Write('\n\n End time:' + end.strftime("%Y-%m-%d %H:%M") + '\n\n')
